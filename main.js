@@ -117,20 +117,22 @@ function tick(){
                     for(;savelines.length!=0;savelines.pop().remove()){}
                     for(var i = 0;i < nodes.length;i++){
                         if(sim_comp[i] == false)nodes[i].style.border = '0px solid #ff0000'
-                        else nodes[i].style.border = '3px solid #ffffff'
+                        else nodes[i].style.border = '3px solid #000000'
                     }
                     nodes[next[1]].style.border = '3px solid #ff0000'
-                    savelines.push(new LeaderLine(
-                        nodes[0],
-                        nodes[next[1]],
-                        {
-                            middleLabel: LeaderLine.pathLabel(next[2].toString()),
-                            startPlug: 'square',
-                            endPlug: 'arrow1',
-                            path: 'fluid',
-                            color: 'royalblue'
-                        }
-                    ));
+                    if(next[1] != 0){
+                        savelines.push(new LeaderLine(
+                            nodes[0],
+                            nodes[next[1]],
+                            {
+                                middleLabel: LeaderLine.pathLabel(next[2].toString()),
+                                startPlug: 'square',
+                                endPlug: 'arrow1',
+                                path: 'fluid',
+                                color: 'royalblue'
+                            }
+                        ));
+                    }
                     sim_comp[next[1]] = true;
                     break;
                 case "Ignore":
