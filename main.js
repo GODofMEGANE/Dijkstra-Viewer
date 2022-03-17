@@ -340,12 +340,13 @@ function start(){
             }
         }
         var now = queue[min_node];
+        if(now == 1)break;
         simulate.push(["Search", now, min_dist]);
         console.log("Search:"+now+" Dist:"+answer[now]);
         queue.splice(min_node,1);
         for(var i = 0;i < N;i++){
             if(now != i && question[now][i] != Infinity && completed[i] == false && answer[i] >= answer[now]+question[now][i]){
-                if(i!=1)simulate.push(["Push", i, answer[now]+question[now][i]]);
+                simulate.push(["Push", i, answer[now]+question[now][i]]);
                 console.log("Push => "+i);
                 queue.push(i);
                 answer[i] = answer[now]+question[now][i];
@@ -357,7 +358,7 @@ function start(){
         completed[now] = true;
         queue = Array.from(new Set(queue));
     }
-    if(completed[1] == false){
+    if(answer[1] == Infinity){
         simulate.push(["End", -1]);
         console.log("ゴールにたどり着けませんでした");
     }
