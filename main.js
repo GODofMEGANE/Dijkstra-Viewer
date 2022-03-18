@@ -8,6 +8,7 @@ var select_node = -1;
 var simulate = new Array(0);
 var starting = false;
 
+var costs = new Array(0);
 var lines = new Array(0);
 var templines = new Array(0);
 var savelines = new Array(0);
@@ -53,6 +54,15 @@ window.onload = function setup(){
         }
     }
     nodes.push(document.getElementById("main").appendChild(element));
+    var ele_text = document.createElement('div');
+    ele_text.width = 50;
+    ele_text.height = 50;
+    ele_text.innerText = "スタート";
+    ele_text.style.textAlign = "center";
+    ele_text.style.position = "absolute";
+    ele_text.style.top = (element.offsetTop-20) + 'px';
+    ele_text.style.left = element.offsetLeft + 'px';
+    costs.push(document.getElementById("main").appendChild(ele_text));
 
     element = document.createElement('img');
     element.src = 'images/goal.png';
@@ -93,6 +103,15 @@ window.onload = function setup(){
         }
     }
     nodes.push(document.getElementById("main").appendChild(element));
+    ele_text = document.createElement('div');
+    ele_text.width = 50;
+    ele_text.height = 50;
+    ele_text.innerText = "ゴール";
+    ele_text.style.textAlign = "center";
+    ele_text.style.position = "absolute";
+    ele_text.style.top = (element.offsetTop-20) + 'px';
+    ele_text.style.left = element.offsetLeft + 'px';
+    costs.push(document.getElementById("main").appendChild(ele_text));
 
     setInterval(loop, 50);
     setInterval(tick, 3000);
@@ -113,6 +132,9 @@ function tick(){
             var next = simulate.shift()
             switch(next[0]){
                 case "Search":
+                    if(next[1] == 0){
+                        for(var i = 0;i < nodenum+1;i++)sim_comp[i] = false;
+                    }
                     document.getElementById('text').innerText = "探索していない頂点の内一番近いこの頂点から探索を行います";
                     for(;savelines.length!=0;savelines.pop().remove()){}
                     for(var i = 0;i < nodes.length;i++){
@@ -151,6 +173,7 @@ function tick(){
                     break;
                 case "Push":
                     document.getElementById('text').innerText = "この頂点へは距離"+next[2]+"で行くことができます";
+                    costs[next[1]].innerText = next[2];
                     templines.push(new LeaderLine(
                         nodes[0],
                         nodes[next[1]],
@@ -196,6 +219,11 @@ function tick(){
                             }
                         ));
                     }
+                    for(var i = 0;i < nodenum+1;i++){
+                        costs[i].innerText = "";
+                    }
+                    costs[0].innerText = "スタート";
+                    costs[1].innerText = "ゴール";
                     break;
             }
         }
@@ -219,6 +247,10 @@ function drawline(){
                 ));
             }
         }
+    }
+    for(var i = 0;i < nodenum+1;i++){
+        costs[i].style.top = (nodes[i].offsetTop-20) + 'px';
+        costs[i].style.left = nodes[i].offsetLeft + 'px';
     }
 }
 
@@ -278,9 +310,11 @@ function addnode(){
             else if(select_node != parseInt(this.id)){
                 if(arr[select_node][parseInt(this.id)] == Infinity){
                     var weight = parseFloat(prompt('辺の長さを入力','例:1.0'));
-                    arr[select_node][parseInt(this.id)] = weight;
-                    arr[parseInt(this.id)][select_node] = weight;
-                    select_node = -1;
+                    if(weight!=NaN){
+                        arr[select_node][parseInt(this.id)] = weight;
+                        arr[parseInt(this.id)][select_node] = weight;
+                        select_node = -1;
+                    }
                 }
                 else{
                     arr[select_node][parseInt(this.id)] = Infinity;
@@ -293,6 +327,15 @@ function addnode(){
     }
 
     nodes.push(document.getElementById("main").appendChild(element));
+    var ele_text = document.createElement('div');
+    ele_text.width = 50;
+    ele_text.height = 50;
+    ele_text.innerText = "";
+    ele_text.style.textAlign = "center";
+    ele_text.style.position = "absolute";
+    ele_text.style.top = (element.offsetTop-20) + 'px';
+    ele_text.style.left = element.offsetLeft + 'px';
+    costs.push(document.getElementById("main").appendChild(ele_text));
     drawline();
     console.log(arr);
 }
@@ -310,6 +353,7 @@ function deletenode(){
         arr = newarr;
     
         nodes.pop().remove();
+        costs.pop().remove();
         drawline();
         console.log(arr);
     }
