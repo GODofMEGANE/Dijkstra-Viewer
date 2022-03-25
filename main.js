@@ -158,7 +158,7 @@ function tick(){
                     sim_comp[next[1]] = true;
                     break;
                 case "Ignore":
-                    document.getElementById('text').innerText = "この頂点へ行けますがもっと短い経路が見つかっているため無視します";
+                    document.getElementById('text').innerText = "この頂点の最短距離を更新できないため無視します";
                     templines.push(new LeaderLine(
                         nodes[0],
                         nodes[next[1]],
@@ -186,6 +186,37 @@ function tick(){
                         }
                     ));
                     break;
+                case "LoopContinue":
+                    document.getElementById('text').innerText = "このループで値の更新があったためもう一度ループします";
+                    break;
+                case "LoopEnd":
+                    document.getElementById('text').innerText = "このループで値の更新がなかったため終了します";
+                    break;
+                case "DetourK":
+                    document.getElementById('text').innerText = "回り道によってさらに最短経路を通ることができます";
+                    templines.push(new LeaderLine(
+                        nodes[next[1]],
+                        nodes[next[3]],
+                        {
+                            middleLabel: LeaderLine.pathLabel(""),
+                            startPlug: 'square',
+                            endPlug: 'arrow1',
+                            path: 'fluid',
+                            color: 'forestgreen'
+                        }
+                    ));
+                    templines.push(new LeaderLine(
+                        nodes[next[3]],
+                        nodes[next[2]],
+                        {
+                            middleLabel: LeaderLine.pathLabel(next[4].toString()),
+                            startPlug: 'square',
+                            endPlug: 'arrow1',
+                            path: 'fluid',
+                            color: 'forestgreen'
+                        }
+                    ));
+                    break;
                 case "End":
                     if(next[1] == -1){
                         document.getElementById('text').innerText = "ゴールへはたどり着けませんでした";
@@ -194,6 +225,20 @@ function tick(){
                             nodes[1],
                             {
                                 middleLabel: LeaderLine.pathLabel("???"),
+                                startPlug: 'square',
+                                endPlug: 'arrow1',
+                                path: 'fluid',
+                                color: 'orange'
+                            }
+                        ));
+                    }
+                    else if(next[1] == -2){
+                        document.getElementById('text').innerText = "頂点の回数繰り返してもループしたため負の閉路が存在します";
+                        lines.push(new LeaderLine(
+                            nodes[0],
+                            nodes[1],
+                            {
+                                middleLabel: LeaderLine.pathLabel("-Infinity"),
                                 startPlug: 'square',
                                 endPlug: 'arrow1',
                                 path: 'fluid',
@@ -359,9 +404,23 @@ function deletenode(){
     }
 }
 
-function start(){
+function start(algorithm){
     console.log(arr);
+    switch(algorithm){
+        case 0:
+            dijkstra();
+            break;
+        case 1:
+            bellmanford();
+            break;
+        case 2:
+            floydwarshall();
+            break;
+    }
+    
+}
 
+function dijkstra(){
     var N = nodenum+1;
     var question = arr;
     var completed = new Array(N);
@@ -411,6 +470,82 @@ function start(){
     else{
         simulate.push(["End", answer[1]]);
         console.log("距離は" + answer[1]);
+    }
+    for(var i = 0;i < N;i++)sim_comp.push(false);
+    starting = true;
+}
+
+function bellmanford(){
+    var N = nodenum+1;
+    var question = arr;
+    var answer = new Array(N);
+    for(var i = 0;i < N;i++){
+        answer[i] = Infinity;
+    }
+    answer[0] = 0;
+    var changed = false;
+    for(var loop = 0;loop < N;loop++){
+        changed = false;
+        for(var node = 0;node < N;node++){
+            if(answer[node]==Infinity)continue;
+            simulate.push(["Search", node, answer[node]]);
+            for(var edge = 0;edge < N;edge++){
+                if(node!=edge && question[node][edge]!=Infinity && answer[node]+question[node][edge]<answer[edge]){
+                    simulate.push(["Push", edge, answer[node]+question[node][edge]]);
+                    console.log("Push => "+edge);
+                    answer[edge] = answer[node]+question[node][edge];
+                    changed = true;
+                }
+                else if(node!=edge && question[node][edge]!=Infinity){
+                    simulate.push(["Ignore", edge, answer[node]+question[node][edge]]);
+                }
+            }
+        }
+        if(changed==false){
+            simulate.push(["LoopEnd"]);
+            break;
+        }
+        else{
+            simulate.push(["LoopContinue"]);
+        }
+    }
+    if(changed){
+        simulate.push(["End", -2]);
+        console.log("ゴールにたどり着けませんでした");
+    }
+    else if(answer[1] == Infinity){
+        simulate.push(["End", -1]);
+        console.log("ゴールにたどり着けませんでした");
+    }
+    else{
+        simulate.push(["End", answer[1]]);
+        console.log("距離は" + answer[1]);
+    }
+    for(var i = 0;i < N;i++)sim_comp.push(false);
+    starting = true;
+}
+
+function floydwarshall(){
+    var N = nodenum+1;
+    var question = arr;
+    for (var k = 0; k < N; k++){
+        for (var i = 0; i < N; i++) {
+            for (var j = 0; j < N; j++) {
+                if(question[i][j] > question[i][k] + question[k][j]){
+                    simulate.push(["DetourK", i, j, k, question[i][k] + question[k][j]]);
+                    console.log("DetourK => "+j);
+                    question[i][j] = question[i][k] + question[k][j]
+                }
+            }
+        }
+    }
+    if(question[0][1] == Infinity){
+        simulate.push(["End", -1]);
+        console.log("ゴールにたどり着けませんでした");
+    }
+    else{
+        simulate.push(["End", question[0][1]]);
+        console.log("距離は" + question[0][1]);
     }
     for(var i = 0;i < N;i++)sim_comp.push(false);
     starting = true;
