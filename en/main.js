@@ -519,7 +519,7 @@ function bellmanford(){
     }
     else{
         simulate.push(["End", answer[1]]);
-        console.log("距離は" + answer[1]);
+        console.log("Distance:" + answer[1]);
     }
     for(var i = 0;i < N;i++)sim_comp.push(false);
     starting = true;
